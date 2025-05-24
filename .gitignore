@@ -1,3 +1,6 @@
 *.sql
 djangoenv
 polls
+polecenia.txt
+SQLs.txt
+__pycache__
