@@ -4,3 +4,5 @@ polls
 polecenia.txt
 SQLs.txt
 __pycache__
+.idea
+venv
