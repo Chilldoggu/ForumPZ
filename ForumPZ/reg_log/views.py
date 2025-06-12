@@ -4,8 +4,18 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()
+
+class ProtectedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({
+            "message": "Secured endpoint",
+            "email": request.user.email
+        })
 
 class RegisterView(APIView):
     def post(self, request):
