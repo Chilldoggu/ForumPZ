@@ -78,6 +78,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173'
 ]
 
+# Allow cookies / credentials
+CORS_ALLOW_CREDENTIALS = True
+
 ROOT_URLCONF = 'app.urls'
 
 TEMPLATES = [
