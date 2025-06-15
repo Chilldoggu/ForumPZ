@@ -1,8 +1,5 @@
 from django.db import models
 
-class User(models.Model):
-    ...
-
 
 class Thread(models.Model):
     ...

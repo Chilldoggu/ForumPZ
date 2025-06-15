@@ -1,3 +1,4 @@
+from decouple import config
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
@@ -6,7 +7,13 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
-
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.mail import send_mail
+from django.utils.encoding import force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from .utils import generate_verification_link
 
 User = get_user_model()
 
@@ -42,7 +49,45 @@ class RegisterView(APIView):
             email=email,
             first_name=first_name,
             last_name=last_name,
-            password=make_password(password)  # Encrypt password
+            password=make_password(password),  # Encrypt password
+            is_active = False  # Deactivate until email confirmed
         )
 
-        return Response({'detail': 'User created successfully.'}, status=201)
+        verification_link = generate_verification_link(user)
+        # Generate email verification link
+        send_mail(
+            subject="Verify Your Email",
+            message=f"Click the link to verify your email: {verification_link}",
+            from_email="forumpz80@gmail.com",
+            recipient_list=[email],
+        )
+
+        return Response({'detail': 'User created successfully, verify email'}, status=201)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({'Blacklisted'}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({'Exception'}, status=status.HTTP_400_BAD_REQUEST)
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+
+            if default_token_generator.check_token(user, token):
+                user.is_active = True
+                user.save()
+                return Response({"message": "Email verified successfully."}, status=200)
+            else:
+                return Response({"error": "Invalid token."}, status=400)
+        except Exception as e:
+            return Response({"error": "Verification failed."}, status=400)

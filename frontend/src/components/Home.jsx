@@ -7,7 +7,7 @@ export default function Home({ accessToken }) {
   useEffect(() => {
     const fetchProtectedData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/protected/", {
+        const response = await fetch("http://localhost:8000/api/protected/", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${accessToken}`,
@@ -34,18 +34,41 @@ export default function Home({ accessToken }) {
     }
   }, [accessToken]);
 
+
+  const logout = async () => {
+  const refresh = localStorage.getItem('refreshToken');
+
+  try {
+    await fetch('/api/logout/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+  } catch (error) {
+    console.error('Logout error', error);
+  }
+
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  window.location.href = '/login';
+  };
+
   return (
-    <div>
-      <h2>Protected Page</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {data ? (
-        <div>
-          <p>{data.message}</p>
-          <p>Email: {data.email}</p>
-        </div>
-      ) : (
-        !error && <p>Loading...</p>
-      )}
-    </div>
+      <div>
+        <h2>Protected Page</h2>
+        <button onClick={logout}>Logout</button>
+        {error && <p style={{color: "red"}}>{error}</p>}
+        {data ? (
+            <div>
+              <p>{data.message}</p>
+              <p>Email: {data.email}</p>
+            </div>
+        ) : (
+            !error && <p>Loading...</p>
+        )}
+      </div>
   );
 }

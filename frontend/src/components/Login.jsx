@@ -19,7 +19,7 @@ export default function Login({ onLogin }) {
 
       if (response.ok) {
         // Save the access token
-        onLogin(data.access);
+        onLogin(data.access, data.refresh);
         setMessage("Login successful!");
       } else {
         setMessage(data.detail || "Login error");

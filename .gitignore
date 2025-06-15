@@ -6,7 +6,7 @@ SQLs.txt
 __pycache__
 .idea
 venv
-
+.env
 
 # Logs (React + vite)
 logs
