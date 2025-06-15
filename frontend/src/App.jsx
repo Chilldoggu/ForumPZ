@@ -3,6 +3,8 @@ import './App.css'
 import Register from './components/Register'
 import Login from './components/Login'
 import Home from './components/Home'
+import ResetPasswordRequest from'./components/ResetPasswordRequest'
+import ResetPasswordConfirm from'./components/ResetPasswordConfirm'
 import VerifyEmailPage from './components/VerifyEmailPage'
 import { Routes, Route } from 'react-router-dom'
 
@@ -26,6 +28,8 @@ function App() {
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/home" element={<Home accessToken={accessToken} />} />
         <Route path="/verify-email/:uid/:token" element={<VerifyEmailPage />} />
+        <Route path="/reset-password" element={<ResetPasswordRequest />} />
+        <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
       </Routes>
     </>
   );
