@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'reg_log'
+    'reg_log',
+    'threads'
 ]
 
 #For JWT authentication
