@@ -3,7 +3,7 @@ from .serializers import ThreadSerializer, CommentSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Thread
+from .models import Thread, Comment
 
 class ThreadCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -29,3 +29,16 @@ class CommentCreateView(APIView):
             serializer.save(author=request.user, thread=thread)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ListCommentsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, thread_id):
+        try:
+            thread = Thread.objects.get(id=thread_id)
+        except Thread.DoesNotExist:
+            return Response({"error": "Thread not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        comments = Comment.objects.filter(thread=thread).order_by('created_at')
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
