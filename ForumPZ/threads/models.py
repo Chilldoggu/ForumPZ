@@ -15,6 +15,7 @@ class Thread(models.Model):
         return self.title
 
 
+
 class Comment(models.Model):
     thread = models.ForeignKey(Thread, related_name='comments', on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
