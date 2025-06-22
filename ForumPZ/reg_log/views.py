@@ -33,3 +33,7 @@ class RegisterView(APIView):
         )
 
         return Response({'detail': 'User created successfully.'}, status=201)
+
+
+class RegisterAPIView:
+    pass
