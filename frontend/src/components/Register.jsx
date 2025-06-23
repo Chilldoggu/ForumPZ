@@ -1,13 +1,15 @@
 import { useState } from 'react';
+import { Button, Form, Container } from 'react-bootstrap';
 
-export default function Register() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+
+const Register = () => {
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+    });
 
   const [message, setMessage] = useState('');
 
@@ -51,55 +53,82 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Register</h2>
-      <input
-        type="text"
-        name="firstName"
-        placeholder="First Name"
-        value={formData.firstName}
-        onChange={handleChange}
-        required
-      />
-      <br />
-      <input
-        type="text"
-        name="lastName"
-        placeholder="Last Name"
-        value={formData.lastName}
-        onChange={handleChange}
-        required
-      />
-      <br />
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value={formData.email}
-        onChange={handleChange}
-        required
-      />
-      <br />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        value={formData.password}
-        onChange={handleChange}
-        required
-      />
-      <br />
-      <input
-        type="password"
-        name="confirmPassword"
-        placeholder="Confirm Password"
-        value={formData.confirmPassword}
-        onChange={handleChange}
-        required
-      />
-      <br />
-      <button type="submit">Register</button>
-      <p>{message}</p>
-    </form>
+    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+            <Form onSubmit={handleSubmit} className="w-50">
+                <h2 className="mb-4">Register</h2>
+
+                {message && (
+                    <div className={`alert ${message.includes('successful') ? 'alert-success' : 'alert-danger'}`}>
+                        {message}
+                    </div>
+                )}
+
+                <Form.Group controlId="formBasicFirstName" className="mb-3">
+                    <Form.Label>First Name</Form.Label>
+                    <Form.Control
+                        type="text"
+                        name="firstName"
+                        placeholder="Enter your Name"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                    />
+                </Form.Group>
+
+                <Form.Group controlId="formBasicLastName" className="mb-3">
+                    <Form.Label>Last Name</Form.Label>
+                    <Form.Control
+                        type="text"
+                        name="lastName"
+                        placeholder="Enter your Last Name"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                    />
+                </Form.Group>
+
+                <Form.Group controlId="formBasicEmail" className="mb-3">
+                    <Form.Label>Email</Form.Label>
+                    <Form.Control
+                        type="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                    />
+                </Form.Group>
+
+                <Form.Group controlId="formBasicPassword" className="mb-3">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                    />
+                </Form.Group>
+
+                <Form.Group controlId="formBasicConfirmPassword" className="mb-3">
+                    <Form.Label>Confirm Password</Form.Label>
+                    <Form.Control
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                    />
+                </Form.Group>
+
+                <Button variant="primary" type="submit" className="w-100">
+                    Register
+                </Button>
+            </Form>
+        </Container>
   );
 }
+
+export default Register;

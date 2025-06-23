@@ -67,6 +67,9 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
 FRONTEND_URL = "http://localhost:5173"
 
+#reset time for tokens
+PASSWORD_RESET_TIMEOUT = 60 * 60  # 2 hour in seconds
+
 #JWT configuration
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
