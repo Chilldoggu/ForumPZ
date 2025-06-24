@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Button, Form, Container } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const navigate = useNavigate();
 
 
   const handleSubmit = async (e) => {
@@ -24,6 +27,7 @@ const Login = ({ onLogin }) => {
         // Save the access token
         onLogin(data.access, data.refresh);
         setMessage("Login successful!");
+        setTimeout(() => navigate('/home'), 1000);
       } else {
         setMessage(data.detail || "Login error");
       }
@@ -69,15 +73,26 @@ const Login = ({ onLogin }) => {
                     />
                 </Form.Group>
 
-                 <div className="d-flex justify-content-between">
-                    <Button variant="primary" type="submit" className="w-50 me-2">
-                        Enter
-                    </Button>
+                <Form.Group controlId="RememberMe" className="mb-3">
+                    <Form.Check
+                        type="checkbox"
+                        label="Remember me"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                </Form.Group>
+
+                <Button variant="primary" type="submit" className="w-100">
+                    Enter
+                </Button>
+                <div className="d-flex flex-column align-items-end gap-2">
                     <Link to="/register" className="text-decoration-none">
                         You don't have account?
                     </Link>
+                    <Link to="/reset-password" className="text-decoration-none">
+                        Forgot password?
+                    </Link>
                 </div>
-                <p>{message}</p>
             </Form>
         </Container>
   );

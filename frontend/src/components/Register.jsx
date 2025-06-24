@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Form, Container } from 'react-bootstrap';
+import {Link, useNavigate} from "react-router-dom";
 
 
 const Register = () => {
@@ -12,6 +13,8 @@ const Register = () => {
     });
 
   const [message, setMessage] = useState('');
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -44,6 +47,7 @@ const Register = () => {
 
       if (response.ok) {
         setMessage('Registration successful!');
+        setTimeout(() => navigate('/login'), 1000);
       } else {
         setMessage(data.detail || 'Error occurred.');
       }
@@ -55,7 +59,7 @@ const Register = () => {
   return (
     <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
             <Form onSubmit={handleSubmit} className="w-50">
-                <h2 className="mb-4">Register</h2>
+                <h2 className="mb-3 d-flex justify-content-center">Register</h2>
 
                 {message && (
                     <div className={`alert ${message.includes('successful') ? 'alert-success' : 'alert-danger'}`}>
@@ -63,7 +67,7 @@ const Register = () => {
                     </div>
                 )}
 
-                <Form.Group controlId="formBasicFirstName" className="mb-3">
+                <Form.Group controlId="formBasicFirstName" className="mb-2">
                     <Form.Label>First Name</Form.Label>
                     <Form.Control
                         type="text"
@@ -75,7 +79,7 @@ const Register = () => {
                     />
                 </Form.Group>
 
-                <Form.Group controlId="formBasicLastName" className="mb-3">
+                <Form.Group controlId="formBasicLastName" className="mb-2">
                     <Form.Label>Last Name</Form.Label>
                     <Form.Control
                         type="text"
@@ -87,7 +91,7 @@ const Register = () => {
                     />
                 </Form.Group>
 
-                <Form.Group controlId="formBasicEmail" className="mb-3">
+                <Form.Group controlId="formBasicEmail" className="mb-2">
                     <Form.Label>Email</Form.Label>
                     <Form.Control
                         type="email"
@@ -99,7 +103,7 @@ const Register = () => {
                     />
                 </Form.Group>
 
-                <Form.Group controlId="formBasicPassword" className="mb-3">
+                <Form.Group controlId="formBasicPassword" className="mb-2">
                     <Form.Label>Password</Form.Label>
                     <Form.Control
                         type="password"
@@ -111,7 +115,7 @@ const Register = () => {
                     />
                 </Form.Group>
 
-                <Form.Group controlId="formBasicConfirmPassword" className="mb-3">
+                <Form.Group controlId="formBasicConfirmPassword" className="mb-2">
                     <Form.Label>Confirm Password</Form.Label>
                     <Form.Control
                         type="password"
@@ -123,9 +127,14 @@ const Register = () => {
                     />
                 </Form.Group>
 
-                <Button variant="primary" type="submit" className="w-100">
+                <Button variant="primary" type="submit" className="w-25 d-flex justify-content-center align-items-center mx-auto">
                     Register
                 </Button>
+                <div className="d-flex flex-column align-items-end">
+                    <Link to="/login" className="text-decoration-none">
+                        You have account?
+                    </Link>
+                </div>
             </Form>
         </Container>
   );
