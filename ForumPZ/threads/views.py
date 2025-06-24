@@ -8,6 +8,8 @@ from .models import Thread, Comment, Permission
 from django.contrib.auth import get_user_model
 from rest_framework import generics
 from rest_framework.generics import RetrieveAPIView
+from django.db.models import Q
+
 
 
 User = get_user_model()
@@ -22,15 +24,23 @@ class ThreadCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ThreadDetailView(RetrieveAPIView):
+class ThreadDetailView(APIView):
     queryset = Thread.objects.all()
     serializer_class = ThreadSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'id'  # use the URL <id> to look up the thread
 
-class PublicThreadListView(generics.ListAPIView):
-    queryset = Thread.objects.filter(is_public=True)
+class ThreadListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = ThreadSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Thread.objects.filter(
+            Q(is_public=True) |
+            Q(author=user) |
+            Q(permissions__user=user)
+        ).distinct()
 
 class CommentCreateView(APIView):
     permission_classes = [IsAuthenticated]
