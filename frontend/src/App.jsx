@@ -8,6 +8,7 @@ import ResetPasswordRequest from'./components/ResetPasswordRequest'
 import ResetPasswordConfirm from'./components/ResetPasswordConfirm'
 import VerifyEmailPage from './components/VerifyEmailPage'
 import { Routes, Route } from 'react-router-dom'
+import NotFound from './components/NotFound'
 
 
 //NOT TO STORE JWT IN LOCAL STORAGE, NEED TO CHANGE IT
@@ -32,6 +33,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordRequest />} />
         <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
         <Route path="/thread/:id" element={<Thread accessToken={accessToken} />} />
+        <Route path="/*" element={<NotFound />} />
       </Routes>
     </>
   );
