@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
-import { Container, Button, Form, FormControl, FormGroup, FormLabel, FormCheck } from 'react-bootstrap';
+import {
+  Container,
+  Button,
+  Form,
+  FormControl,
+  FormGroup,
+  FormLabel,
+  FormCheck,
+} from 'react-bootstrap';
 
 function CreateThread() {
   const [formData, setFormData] = useState({
-    name: '',
-    type: '',
+    title: '',
+    is_public: '',
     description: '',
     tags: '',
     image: null,
@@ -13,9 +21,9 @@ function CreateThread() {
   const [message, setMessage] = useState('');
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'image') {
-      setFormData({ ...formData, image: files[0] });
+    const { name, value, type, files } = e.target;
+    if (type === 'file') {
+      setFormData({ ...formData, [name]: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -25,24 +33,20 @@ function CreateThread() {
     e.preventDefault();
 
     try {
-      const token = sessionStorage.getItem('access');
       const threadData = new FormData();
-
-      threadData.append('name', formData.name);
-      threadData.append('type', formData.type);
-      /*threadData.append('description', formData.description);
-      threadData.append('tags', formData.tags);*/
+      threadData.append('title', formData.title);
+      threadData.append('is_public', formData.is_public);
+      threadData.append('description', formData.description);
+      threadData.append('tags', formData.tags);
 
       if (formData.image) {
         threadData.append('image', formData.image);
       }
 
-      console.log([...threadData.entries()]);
-
       const response = await fetch('http://localhost:8000/api/threads/create', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: threadData,
       });
@@ -63,13 +67,13 @@ function CreateThread() {
   return (
     <Container>
       <Form onSubmit={handleSubmit}>
-        <FormGroup controlId="name" className="mb-5 form-control-lg">
-          <FormLabel>Name</FormLabel>
+        <FormGroup controlId="title" className="mb-5 form-control-lg">
+          <FormLabel>Title</FormLabel>
           <Form.Control
             type="text"
-            placeholder="Enter name"
-            name="name"
-            value={formData.name}
+            placeholder="Enter thread title"
+            name="title"
+            value={formData.title}
             onChange={handleChange}
           />
         </FormGroup>
@@ -79,17 +83,17 @@ function CreateThread() {
           <FormCheck
             type="radio"
             label="Public"
-            name="type"
-            value="C"
-            checked={formData.type === 'C'}
+            name="is_public"
+            value="1"
+            checked={formData.is_public === '1'}
             onChange={handleChange}
           />
           <FormCheck
             type="radio"
             label="Private"
-            name="type"
-            value="P"
-            checked={formData.type === 'P'}
+            name="is_public"
+            value="0"
+            checked={formData.is_public === '0'}
             onChange={handleChange}
           />
         </FormGroup>
