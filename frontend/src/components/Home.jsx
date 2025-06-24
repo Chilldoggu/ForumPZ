@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {Button, Container} from "react-bootstrap";
 
-export default function Home({ accessToken }) {
+const  Home = ({ accessToken }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [threads, setThreads] = useState([]);
@@ -76,35 +77,80 @@ export default function Home({ accessToken }) {
 
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    window.location.href = '/login';
+    window.location.href = '/home';
   };
 
   return (
-    <div>
-      <h2>Protected Page</h2>
-      <button onClick={logout}>Logout</button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {data ? (
-        <div>
-          <p>{data.message}</p>
-          <p>Email: {data.email}</p>
-
-          <h3>Public Threads:</h3>
-          <ul>
-            {threads.map((thread) => (
-                <li key={thread.id}>
-                  <Link to={`/thread/${thread.id}`} style={{color: "blue", textDecoration: "underline"}}>
-                    <strong>{thread.title}</strong>
-                  </Link>{" "}
-                  by {thread.author} <br/>
-                  <small>{new Date(thread.creation_time).toLocaleString()}</small>
-                </li>
-            ))}
-          </ul>
+    <Container fluid className="p-o" style={{minHeight: "100vh"}}>
+      <div className="d-flex flex-row justify-content-center align-items-center p-3 bg-light" style={{minHeight: "10vh"}}>
+        <input
+            type="text"
+            placeholder="Search"
+            className="w-50 form-control ms-auto align-content-lg-center"
+        />
+        <div className={"ms-auto d-flex"}>
+          {accessToken ? (
+              <Button variant="secondary" className={"me-2"} onClick={logout}>
+                Logout
+              </Button>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="secondary" className={"me-2"} > Sign In </Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="secondary" className={"me-2"} > Register </Button>
+                </Link>
+              </>
+            )
+          }
         </div>
-      ) : (
-          !error && <p>Loading...</p>
-      )}
-    </div>
+      </div>
+
+      { accessToken ? (
+          <div className="d-flex" style={{minHeight: "80vh"}}>
+            <div
+              style={{
+                flex:"0 0 20%",
+                background: "grey",
+                padding: "20px",
+                overflowY: "auto",
+              }}
+            >
+              <h5>Menu</h5>
+              {data ? (
+                  <p>Welcome, {data.email}</p>
+              ) : (
+                  <p>{error}</p>
+              )}
+
+            </div>
+            <div
+                style={{
+                  flex:"1",
+                  padding: "20px",
+                  overflowY: "auto",
+                }}
+            >
+              <h5 className={"d-flex mx-auto align-content-lg-center justify-content-center"}> Threads Feed</h5>
+              {threads.map((thread) => (
+                <div key={thread.id}>
+                  <h6>
+                    <Link to={`/thread/${thread.id}`}>{thread.title}</Link>
+                  </h6>
+                  <p>{thread.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+            <div className="d-flex align-content-lg-center justify-content-center" >
+              <p>Welcome to our Forum</p>
+            </div>
+        )
+      }
+    </Container>
   );
 }
+
+export default Home;

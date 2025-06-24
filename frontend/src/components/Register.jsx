@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Form, Container } from 'react-bootstrap';
-import {Link, useNavigate} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 
 const Register = () => {
@@ -14,7 +14,6 @@ const Register = () => {
 
   const [message, setMessage] = useState('');
 
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -47,7 +46,6 @@ const Register = () => {
 
       if (response.ok) {
         setMessage('Registration successful!');
-        setTimeout(() => navigate('/login'), 1000);
       } else {
         setMessage(data.detail || 'Error occurred.');
       }

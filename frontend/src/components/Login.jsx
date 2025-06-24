@@ -6,7 +6,6 @@ const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
 
   const navigate = useNavigate();
 
@@ -70,15 +69,6 @@ const Login = ({ onLogin }) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                    />
-                </Form.Group>
-
-                <Form.Group controlId="RememberMe" className="mb-3">
-                    <Form.Check
-                        type="checkbox"
-                        label="Remember me"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
                     />
                 </Form.Group>
 
