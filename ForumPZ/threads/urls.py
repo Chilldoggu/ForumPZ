@@ -1,5 +1,6 @@
 from django.urls import path
-from threads.views import ThreadCreateView, CommentCreateView, ListCommentsView, AllowUserView, DenyUserView, ListOfAllowedUsersView, ThreadListView, ThreadDetailView
+from threads.views import ThreadCreateView, CommentCreateView, ListCommentsView, AllowUserView, DenyUserView, \
+    ListOfAllowedUsersView, ThreadListView, ThreadDetailView, ThreadTitleView
 
 urlpatterns = [
     path('api/threads/create', ThreadCreateView.as_view(), name='create-thread'),
@@ -10,4 +11,5 @@ urlpatterns = [
     path('api/threads/<int:thread_id>/removeuser/', DenyUserView.as_view(), name='remove-user-from-private-thread'),
     path('api/threads/<int:thread_id>/allowedusers/', ListOfAllowedUsersView.as_view(), name='list-of-allowed-users'),
     path('api/threads/', ThreadListView.as_view(), name='thread-list'),
+    path('api/threads/<int:id>/title/', ThreadTitleView.as_view(), name='thread-title'),  # ← this line
 ]

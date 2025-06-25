@@ -166,3 +166,16 @@ def user_has_permission(user, thread):
         return True
     return Permission.objects.filter(thread=thread, user=user).exists() or thread.author == user
 
+class ThreadTitleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        try:
+            thread = Thread.objects.get(id=id)
+        except Thread.DoesNotExist:
+            return Response({"error": "Thread not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user_has_permission(request.user, thread):
+            return Response({"error": "You don't have access to this thread."}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response({"title": thread.title}, status=status.HTTP_200_OK)

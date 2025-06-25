@@ -132,3 +132,4 @@ class PasswordResetConfirmView(APIView):
 
         except Exception as e:
             return Response({"error": "Something went wrong."}, status=400)
+

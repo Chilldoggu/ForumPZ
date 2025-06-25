@@ -45,6 +45,7 @@ const Home = ({ accessToken }) => {
         if (res.ok) {
           const threadsData = await res.json();
           setThreads(threadsData);
+          updateCommittedThreads(threadsData);
         } else {
           console.error("Failed to fetch threads");
         }
@@ -53,36 +54,50 @@ const Home = ({ accessToken }) => {
       }
     };
 
-    const fetchSidebarData = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/api/sidebar-data/", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+    const updateCommittedThreads = (threadsData) => {
+      if (data && data.email) {
+        console.log("Fetched Threads Data:", threadsData);
 
-        if (res.ok) {
-          const result = await res.json();
-          setLastVisitedThreads(result.last_visited);
-          setLastCommittedThreads(result.last_committed);
-        } else {
-          console.error("Failed to fetch sidebar data");
-        }
-      } catch (err) {
-        console.error("Error loading sidebar data:", err);
+        const committed = threadsData
+          .filter(
+            (thread) =>
+              thread.comments &&
+              thread.comments.some(
+                (comment) => comment.authorEmail === data.email
+              )
+          )
+          .map((t) => ({ id: t.id, title: t.title }));
+
+        console.log("Committed Threads:", committed);
+
+        setLastCommittedThreads(committed);
+        localStorage.setItem("committedThreads", JSON.stringify(committed));
       }
+    };
+
+    const loadSidebarData = () => {
+      const storedVisited = JSON.parse(localStorage.getItem("visitedThreads")) || [];
+      setLastVisitedThreads(storedVisited);
     };
 
     if (accessToken) {
       fetchProtectedData();
       fetchThreads();
-      fetchSidebarData();
+      loadSidebarData();
     } else {
       setError("No token provided");
+      loadSidebarData();
     }
-  }, [accessToken]);
+  }, [accessToken, data]);
+
+  const handleThreadVisit = (thread) => {
+    let visited = JSON.parse(localStorage.getItem("visitedThreads")) || [];
+    visited = visited.filter((t) => t.id !== thread.id);
+    visited.unshift({ id: thread.id, title: thread.title });
+    visited = visited.slice(0, 10);
+    localStorage.setItem("visitedThreads", JSON.stringify(visited));
+    setLastVisitedThreads(visited);
+  };
 
   const logout = async () => {
     const refresh = localStorage.getItem("refreshToken");
@@ -154,7 +169,6 @@ const Home = ({ accessToken }) => {
               <>
                 <p>Welcome, {data.email}</p>
                 <hr />
-
                 <div>
                   <h6>Last Visited</h6>
                   <ul className="list-unstyled">
@@ -199,7 +213,7 @@ const Home = ({ accessToken }) => {
               <p>{error}</p>
             )}
           </div>
-          
+
           <div
             style={{
               flex: "1",
@@ -207,13 +221,30 @@ const Home = ({ accessToken }) => {
               overflowY: "auto",
             }}
           >
-            <h5 className="d-flex mx-auto align-content-lg-center justify-content-center">
-              Threads Feed
-            </h5>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h3>Threads Feed</h3>
+              <Link to="/createthread">
+                <Button variant="primary">Create Thread</Button>
+              </Link>
+            </div>
+
             {threads.map((thread) => (
               <div key={thread.id} className="mb-4">
                 <h6>
-                  <Link to={`/thread/${thread.id}`}>{thread.title}</Link>
+                  <Link
+                    to={`/thread/${thread.id}`}
+                    onClick={() => handleThreadVisit(thread)}
+                  >
+                    {thread.title}
+                  </Link>
+                  <span
+                    style={{
+                      color: thread.is_public ? "green" : "red",
+                      marginLeft: "5px",
+                    }}
+                  >
+                    p
+                  </span>
                 </h6>
                 <p>{thread.content}</p>
               </div>
