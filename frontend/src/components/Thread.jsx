@@ -11,26 +11,26 @@ export default function Thread({ accessToken }) {
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
-    const fetchThreadAndComments = async () => {
-      try {
-        const threadRes = await fetch(`http://localhost:8000/api/threads/${id}/title/`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const threadData = await threadRes.json();
-        setThreadTitle(threadData.title);
-
-        const res = await fetch(`http://localhost:8000/api/threads/${id}/comments/`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const data = await res.json();
-        setComments(data);
-      } catch (err) {
-        setError("Error loading comments");
-      }
-    };
-
     fetchThreadAndComments();
   }, [id, accessToken]);
+
+  const fetchThreadAndComments = async () => {
+    try {
+      const threadRes = await fetch(`http://localhost:8000/api/threads/${id}/title/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const threadData = await threadRes.json();
+      setThreadTitle(threadData.title);
+
+      const res = await fetch(`http://localhost:8000/api/threads/${id}/comments/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await res.json();
+      setComments(data);
+    } catch (err) {
+      setError("Error loading comments");
+    }
+  };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -50,18 +50,32 @@ export default function Thread({ accessToken }) {
         setNewComment("");
         setSuccessMsg("Comment added successfully!");
         setTimeout(() => setSuccessMsg(""), 3000);
-
-        const updated = await fetch(`http://localhost:8000/api/threads/${id}/comments/`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const updatedData = await updated.json();
-        setComments(updatedData);
+        fetchThreadAndComments();
       } else {
         const data = await res.json();
         setError(data.error || "Failed to add comment");
       }
     } catch (err) {
       setError("Error adding comment");
+    }
+  };
+
+  const handleVote = async (commentId, value) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/comments/${commentId}/vote/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ value }),
+      });
+
+      if (res.ok) {
+        fetchThreadAndComments(); // Refresh comments after vote
+      }
+    } catch (err) {
+      console.error("Vote error:", err);
     }
   };
 
@@ -133,6 +147,7 @@ export default function Thread({ accessToken }) {
         {error && <Alert variant="danger">{error}</Alert>}
         {successMsg && <Alert variant="success">{successMsg}</Alert>}
 
+        {/* Form to post a new comment */}
         <Card className="mb-4">
           <Card.Body>
             <Form onSubmit={handleCommentSubmit}>
@@ -153,19 +168,39 @@ export default function Thread({ accessToken }) {
           </Card.Body>
         </Card>
 
+        {/* List of comments */}
         <Card>
           <Card.Body>
             <Card.Title>Comments ({comments.length})</Card.Title>
             <ListGroup variant="flush">
               {comments.map((comment) => (
-                <ListGroup.Item key={comment.id} className="mb-2">
+                <ListGroup.Item key={comment.id} className="mb-3">
                   <div className="d-flex justify-content-between align-items-center">
                     <strong>{comment.author}</strong>
                     <small className="text-muted">
                       {new Date(comment.created_at).toLocaleString()}
                     </small>
                   </div>
-                  <div>{comment.content}</div>
+                  <div className="mt-1">{comment.content}</div>
+
+                  {/* Like/Dislike buttons */}
+                  <div className="mt-2 d-flex align-items-center">
+                    <Button
+                      variant="outline-success"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => handleVote(comment.id, 1)}
+                    >
+                      👍 {comment.likes ?? 0}
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleVote(comment.id, -1)}
+                    >
+                      👎 {comment.dislikes ?? 0}
+                    </Button>
+                  </div>
                 </ListGroup.Item>
               ))}
             </ListGroup>

@@ -110,17 +110,6 @@ function CreateThread() {
           />
         </FormGroup>
 
-        <FormGroup controlId="tags" className="mb-5 form-control-lg">
-          <FormLabel>Tags</FormLabel>
-          <Form.Control
-            type="text"
-            placeholder="Enter tags"
-            name="tags"
-            value={formData.tags}
-            onChange={handleChange}
-          />
-        </FormGroup>
-
         <FormGroup controlId="image" className="mb-5 form-control-lg">
           <FormLabel>Image</FormLabel>
           <FormControl

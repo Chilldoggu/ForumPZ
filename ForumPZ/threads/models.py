@@ -35,3 +35,18 @@ class Permission(models.Model):
 
     def __str__(self):
         return f"Permission: {self.user} on Thread {self.thread.id}"
+
+
+class CommentVote(models.Model):
+    VOTE_TYPE = (
+        (1, 'like'),
+        (-1, 'dislike'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="votes")
+    value = models.SmallIntegerField(choices=VOTE_TYPE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'comment')

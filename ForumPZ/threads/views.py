@@ -4,7 +4,7 @@ from .serializers import ThreadSerializer, CommentSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Thread, Comment, Permission
+from .models import Thread, Comment, Permission, CommentVote
 from django.contrib.auth import get_user_model
 from rest_framework import generics, filters
 from rest_framework.generics import RetrieveAPIView
@@ -181,3 +181,29 @@ class ThreadTitleView(APIView):
             return Response({"error": "You don't have access to this thread."}, status=status.HTTP_403_FORBIDDEN)
 
         return Response({"title": thread.title}, status=status.HTTP_200_OK)
+
+
+class VoteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, comment_id):
+        user = request.user
+        try:
+            comment = Comment.objects.get(id=comment_id)
+        except Comment.DoesNotExist:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        value = request.data.get('value')
+        if value not in [1, -1]:
+            return Response({'error': 'Value must be 1 or -1'}, status=status.HTTP_400_BAD_REQUEST)
+
+        vote, created = CommentVote.objects.get_or_create(
+            user=user,
+            comment=comment,
+            defaults={'value': value}
+        )
+        if not created:
+            vote.value = value
+            vote.save()
+
+        return Response({'message': 'Vote recorded'}, status=status.HTTP_200_OK)
