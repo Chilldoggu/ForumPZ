@@ -8,6 +8,51 @@ const Home = ({ accessToken }) => {
   const [threads, setThreads] = useState([]);
   const [lastVisitedThreads, setLastVisitedThreads] = useState([]);
   const [lastCommittedThreads, setLastCommittedThreads] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchThreads = async (query = "") => {
+      try {
+        const url = query
+          ? `http://localhost:8000/api/threads/?search=${encodeURIComponent(query)}`
+          : `http://localhost:8000/api/threads/`;
+
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (res.ok) {
+          const threadsData = await res.json();
+          setThreads(threadsData);
+          updateCommittedThreads(threadsData);
+        } else {
+          console.error("Failed to fetch threads");
+        }
+      } catch (err) {
+        console.error("Error loading threads:", err);
+      }
+    };
+
+  const updateCommittedThreads = (threadsData) => {
+      if (data && data.email) {
+
+        const committed = threadsData
+          .filter(
+            (thread) =>
+              thread.comments &&
+              thread.comments.some(
+                (comment) => comment.authorEmail === data.email
+              )
+          )
+          .map((t) => ({ id: t.id, title: t.title }));
+
+        setLastCommittedThreads(committed);
+        localStorage.setItem("committedThreads", JSON.stringify(committed));
+      }
+    };
 
   useEffect(() => {
     const fetchProtectedData = async () => {
@@ -32,49 +77,6 @@ const Home = ({ accessToken }) => {
       }
     };
 
-    const fetchThreads = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/api/threads/", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (res.ok) {
-          const threadsData = await res.json();
-          setThreads(threadsData);
-          updateCommittedThreads(threadsData);
-        } else {
-          console.error("Failed to fetch threads");
-        }
-      } catch (err) {
-        console.error("Error loading threads:", err);
-      }
-    };
-
-    const updateCommittedThreads = (threadsData) => {
-      if (data && data.email) {
-        console.log("Fetched Threads Data:", threadsData);
-
-        const committed = threadsData
-          .filter(
-            (thread) =>
-              thread.comments &&
-              thread.comments.some(
-                (comment) => comment.authorEmail === data.email
-              )
-          )
-          .map((t) => ({ id: t.id, title: t.title }));
-
-        console.log("Committed Threads:", committed);
-
-        setLastCommittedThreads(committed);
-        localStorage.setItem("committedThreads", JSON.stringify(committed));
-      }
-    };
-
     const loadSidebarData = () => {
       const storedVisited = JSON.parse(localStorage.getItem("visitedThreads")) || [];
       setLastVisitedThreads(storedVisited);
@@ -88,7 +90,7 @@ const Home = ({ accessToken }) => {
       setError("No token provided");
       loadSidebarData();
     }
-  }, [accessToken, data]);
+  }, [accessToken]);
 
   const handleThreadVisit = (thread) => {
     let visited = JSON.parse(localStorage.getItem("visitedThreads")) || [];
@@ -127,19 +129,32 @@ const Home = ({ accessToken }) => {
         style={{ minHeight: "10vh" }}
       >
         <input
-          type="text"
-          placeholder="Search"
-          className="w-50 form-control ms-auto align-content-lg-center"
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                fetchThreads(e.target.value);
+              }
+            }}
+            className="w-50 form-control ms-auto align-content-lg-center"
         />
+        <Button
+          variant="primary"
+          className="ms-2"
+          onClick={() => fetchThreads(searchTerm)}>
+          Search
+        </Button>
         <div className="ms-auto d-flex">
           {accessToken ? (
-            <Button variant="secondary" className="me-2" onClick={logout}>
-              Logout
-            </Button>
+              <Button variant="secondary" className="me-2" onClick={logout}>
+                Logout
+              </Button>
           ) : (
-            <>
-              <Link to="/login">
-                <Button variant="secondary" className="me-2">
+              <>
+                <Link to="/login">
+                  <Button variant="secondary" className="me-2">
                   Sign In
                 </Button>
               </Link>

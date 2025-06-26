@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Thread, Comment, Permission
 from django.contrib.auth import get_user_model
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.generics import RetrieveAPIView
 from django.db.models import Q
 
@@ -33,6 +33,8 @@ class ThreadDetailView(APIView):
 class ThreadListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ThreadSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']  # Search only by title
 
     def get_queryset(self):
         user = self.request.user
