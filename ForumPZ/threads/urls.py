@@ -13,5 +13,4 @@ urlpatterns = [
     path('api/threads/', ThreadListView.as_view(), name='thread-list'),
     path('api/threads/<int:id>/title/', ThreadTitleView.as_view(), name='thread-title'),
     path('api/comments/<int:comment_id>/vote/', VoteCommentView.as_view(), name="vote-comment"),
-
 ]

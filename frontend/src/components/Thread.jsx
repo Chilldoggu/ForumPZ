@@ -176,7 +176,10 @@ export default function Thread({ accessToken }) {
               {comments.map((comment) => (
                 <ListGroup.Item key={comment.id} className="mb-3">
                   <div className="d-flex justify-content-between align-items-center">
-                    <strong>{comment.author}</strong>
+                    <div>
+                      <strong>{comment.author}</strong>
+                      <small className="ms-2 text-muted">({comment.author_rating ?? 0} pts)</small>
+                    </div>
                     <small className="text-muted">
                       {new Date(comment.created_at).toLocaleString()}
                     </small>

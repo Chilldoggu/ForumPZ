@@ -45,7 +45,7 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage('Registration successful!');
+        setMessage('Registration successful! Link was send to your email');
       } else {
         setMessage(data.detail || 'Error occurred.');
       }
