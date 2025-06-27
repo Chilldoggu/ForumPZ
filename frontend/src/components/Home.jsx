@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Button, Container } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Container, Card } from "react-bootstrap";
 
 const Home = ({ accessToken }) => {
   const [data, setData] = useState(null);
@@ -9,50 +9,32 @@ const Home = ({ accessToken }) => {
   const [lastVisitedThreads, setLastVisitedThreads] = useState([]);
   const [lastCommittedThreads, setLastCommittedThreads] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const fetchThreads = async (query = "") => {
-      try {
-        const url = query
-          ? `http://localhost:8000/api/threads/?search=${encodeURIComponent(query)}`
-          : `http://localhost:8000/api/threads/`;
+    try {
+      const url = query
+        ? `http://localhost:8000/api/threads/?search=${encodeURIComponent(query)}`
+        : `http://localhost:8000/api/threads/`;
 
-        const res = await fetch(url, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (res.ok) {
-          const threadsData = await res.json();
-          setThreads(threadsData);
-          updateCommittedThreads(threadsData);
-        } else {
-          console.error("Failed to fetch threads");
-        }
-      } catch (err) {
-        console.error("Error loading threads:", err);
+      if (res.ok) {
+        const threadsData = await res.json();
+        setThreads(threadsData);
+      } else {
+        console.error("Failed to fetch threads");
       }
-    };
-
-  const updateCommittedThreads = (threadsData) => {
-      if (data && data.email) {
-
-        const committed = threadsData
-          .filter(
-            (thread) =>
-              thread.comments &&
-              thread.comments.some(
-                (comment) => comment.authorEmail === data.email
-              )
-          )
-          .map((t) => ({ id: t.id, title: t.title }));
-
-        setLastCommittedThreads(committed);
-        localStorage.setItem("committedThreads", JSON.stringify(committed));
-      }
-    };
+    } catch (err) {
+      console.error("Error loading threads:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchProtectedData = async () => {
@@ -92,6 +74,23 @@ const Home = ({ accessToken }) => {
     }
   }, [accessToken]);
 
+  useEffect(() => {
+    if (data && data.email && threads.length > 0) {
+      const committed = threads
+        .filter(
+          (thread) =>
+            thread.comments &&
+            thread.comments.some(
+              (comment) => comment.authorEmail === data.email
+            )
+        )
+        .map((t) => ({ id: t.id, title: t.title }));
+
+      setLastCommittedThreads(committed);
+      localStorage.setItem("committedThreads", JSON.stringify(committed));
+    }
+  }, [data, threads]);
+
   const handleThreadVisit = (thread) => {
     let visited = JSON.parse(localStorage.getItem("visitedThreads")) || [];
     visited = visited.filter((t) => t.id !== thread.id);
@@ -99,6 +98,7 @@ const Home = ({ accessToken }) => {
     visited = visited.slice(0, 10);
     localStorage.setItem("visitedThreads", JSON.stringify(visited));
     setLastVisitedThreads(visited);
+    navigate(`/thread/${thread.id}`);
   };
 
   const logout = async () => {
@@ -129,32 +129,33 @@ const Home = ({ accessToken }) => {
         style={{ minHeight: "10vh" }}
       >
         <input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                fetchThreads(e.target.value);
-              }
-            }}
-            className="w-50 form-control ms-auto align-content-lg-center"
+          type="text"
+          placeholder="Search"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              fetchThreads(e.target.value);
+            }
+          }}
+          className="w-50 form-control ms-auto align-content-lg-center"
         />
         <Button
           variant="primary"
           className="ms-2"
-          onClick={() => fetchThreads(searchTerm)}>
+          onClick={() => fetchThreads(searchTerm)}
+        >
           Search
         </Button>
         <div className="ms-auto d-flex">
           {accessToken ? (
-              <Button variant="secondary" className="me-2" onClick={logout}>
-                Logout
-              </Button>
+            <Button variant="secondary" className="me-2" onClick={logout}>
+              Logout
+            </Button>
           ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="secondary" className="me-2">
+            <>
+              <Link to="/login">
+                <Button variant="secondary" className="me-2">
                   Sign In
                 </Button>
               </Link>
@@ -243,27 +244,37 @@ const Home = ({ accessToken }) => {
               </Link>
             </div>
 
-            {threads.map((thread) => (
-              <div key={thread.id} className="mb-4">
-                <h6>
-                  <Link
-                    to={`/thread/${thread.id}`}
-                    onClick={() => handleThreadVisit(thread)}
-                  >
-                    {thread.title}
-                  </Link>
-                  <span
-                    style={{
-                      color: thread.is_public ? "green" : "red",
-                      marginLeft: "5px",
-                    }}
-                  >
-                    p
-                  </span>
-                </h6>
-                <p>{thread.content}</p>
-              </div>
-            ))}
+            {threads.length === 0 ? (
+              <p>No threads with such name</p>
+            ) : (
+              threads.map((thread) => (
+                <Card
+                  key={thread.id}
+                  className="mb-3"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleThreadVisit(thread)}
+                >
+                  <Card.Body>
+                    <div>
+                      <Card.Title className="d-flex align-items-center">
+                        {!thread.is_public && (
+                          <span
+                            role="img"
+                            aria-label="Private thread"
+                            style={{ color: "red", fontWeight: "bold", fontSize: "1.2em", marginRight: "8px" }}
+                            title="Private thread"
+                          >
+                            🔒
+                          </span>
+                        )}
+                        {thread.title}
+                      </Card.Title>
+                      <Card.Text>{thread.content}</Card.Text>
+                    </div>
+                  </Card.Body>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       ) : (
