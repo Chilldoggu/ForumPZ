@@ -1,14 +1,18 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Container, Card, ListGroup, Alert, Form, Button } from "react-bootstrap";
+import { Container, Card, ListGroup, Alert, Form, Button, Row, Col } from "react-bootstrap";
 
 export default function Thread({ accessToken }) {
   const { id } = useParams();
   const [comments, setComments] = useState([]);
   const [threadTitle, setThreadTitle] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [allowedUsers, setAllowedUsers] = useState([]);
   const [error, setError] = useState("");
-  const [newComment, setNewComment] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     fetchThreadAndComments();
@@ -21,14 +25,27 @@ export default function Thread({ accessToken }) {
       });
       const threadData = await threadRes.json();
       setThreadTitle(threadData.title);
+      setIsPublic(threadData.is_public);
+      setIsOwner(threadData.is_owner);
 
       const res = await fetch(`http://localhost:8000/api/threads/${id}/comments/`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = await res.json();
       setComments(data);
+
+      if (!threadData.is_public) {
+        const allowedRes = await fetch(`http://localhost:8000/api/threads/${id}/allowedusers/`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (allowedRes.ok) {
+          const allowedData = await allowedRes.json();
+          setAllowedUsers(allowedData);
+        }
+      }
     } catch (err) {
-      setError("Error loading comments");
+      setError("Error loading thread data");
     }
   };
 
@@ -62,7 +79,7 @@ export default function Thread({ accessToken }) {
 
   const handleVote = async (commentId, value) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/comments/${commentId}/vote/`, {
+      await fetch(`http://localhost:8000/api/comments/${commentId}/vote/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,12 +87,57 @@ export default function Thread({ accessToken }) {
         },
         body: JSON.stringify({ value }),
       });
-
-      if (res.ok) {
-        fetchThreadAndComments(); // Refresh comments after vote
-      }
+      fetchThreadAndComments();
     } catch (err) {
       console.error("Vote error:", err);
+    }
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    if (!newUserEmail.trim()) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/threads/${id}/adduser/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ email: newUserEmail }),
+      });
+
+      if (res.ok) {
+        setNewUserEmail("");
+        fetchThreadAndComments();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to add user");
+      }
+    } catch (err) {
+      setError("Error adding user");
+    }
+  };
+
+  const handleRemoveAllowedUser = async (email) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/threads/${id}/removeuser/`, {
+        method: "POST", // ✅ correct method per backend
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        fetchThreadAndComments();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to remove user");
+      }
+    } catch (err) {
+      setError("Error removing user");
     }
   };
 
@@ -102,52 +164,80 @@ export default function Thread({ accessToken }) {
 
   return (
     <Container fluid className="p-0" style={{ minHeight: "100vh" }}>
-      {/* GÓRNY PASEK */}
-      <div
-        className="d-flex flex-row justify-content-center align-items-center p-3 bg-light"
-        style={{ minHeight: "10vh" }}
-      >
-        <input
-          type="text"
-          placeholder="Search"
-          className="w-50 form-control ms-auto align-content-lg-center"
-        />
+      {/* NAVBAR */}
+      <div className="d-flex flex-row justify-content-center align-items-center p-3 bg-light" style={{ minHeight: "10vh" }}>
+        <input type="text" placeholder="Search" className="w-50 form-control ms-auto" />
         <div className="ms-auto d-flex">
           {accessToken ? (
-            <Button variant="secondary" className="me-2" onClick={logout}>
-              Logout
-            </Button>
+            <Button variant="secondary" className="me-2" onClick={logout}>Logout</Button>
           ) : (
             <>
               <Link to="/login">
-                <Button variant="secondary" className="me-2">
-                  Sign In
-                </Button>
+                <Button variant="secondary" className="me-2">Sign In</Button>
               </Link>
               <Link to="/register">
-                <Button variant="secondary" className="me-2">
-                  Register
-                </Button>
+                <Button variant="secondary" className="me-2">Register</Button>
               </Link>
             </>
           )}
         </div>
       </div>
 
-      {/* TREŚĆ WĄTKU I KOMENTARZE */}
+      {/* THREAD HEADER */}
       <Container className="mt-4">
         <Card className="mb-4">
           <Card.Body>
             <Card.Title>
               Comments for: <strong>{threadTitle || "Loading..."}</strong>
             </Card.Title>
+
+            {!isPublic && (
+              <div className="mt-3">
+                <strong>Allowed Users:</strong>
+                <ul className="mb-3">
+                  {allowedUsers.map((email, index) => (
+                    <li key={index} className="d-flex align-items-center justify-content-between">
+                      <span>{email}</span>
+                      {isOwner && (
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleRemoveAllowedUser(email)}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                {isOwner && (
+                  <Form onSubmit={handleAddUser}>
+                    <Row className="align-items-center">
+                      <Col xs={9}>
+                        <Form.Control
+                          type="email"
+                          placeholder="Enter email to add"
+                          value={newUserEmail}
+                          onChange={(e) => setNewUserEmail(e.target.value)}
+                          required
+                        />
+                      </Col>
+                      <Col xs={3}>
+                        <Button variant="primary" type="submit">Add</Button>
+                      </Col>
+                    </Row>
+                  </Form>
+                )}
+              </div>
+            )}
           </Card.Body>
         </Card>
 
         {error && <Alert variant="danger">{error}</Alert>}
         {successMsg && <Alert variant="success">{successMsg}</Alert>}
 
-        {/* Form to post a new comment */}
+        {/* COMMENT FORM */}
         <Card className="mb-4">
           <Card.Body>
             <Form onSubmit={handleCommentSubmit}>
@@ -161,14 +251,12 @@ export default function Thread({ accessToken }) {
                   required
                 />
               </Form.Group>
-              <Button variant="primary" type="submit">
-                Post Comment
-              </Button>
+              <Button variant="primary" type="submit">Post Comment</Button>
             </Form>
           </Card.Body>
         </Card>
 
-        {/* List of comments */}
+        {/* COMMENTS LIST */}
         <Card>
           <Card.Body>
             <Card.Title>Comments ({comments.length})</Card.Title>
@@ -180,27 +268,14 @@ export default function Thread({ accessToken }) {
                       <strong>{comment.author}</strong>
                       <small className="ms-2 text-muted">({comment.author_rating ?? 0} pts)</small>
                     </div>
-                    <small className="text-muted">
-                      {new Date(comment.created_at).toLocaleString()}
-                    </small>
+                    <small className="text-muted">{new Date(comment.created_at).toLocaleString()}</small>
                   </div>
                   <div className="mt-1">{comment.content}</div>
-
-                  {/* Like/Dislike buttons */}
                   <div className="mt-2 d-flex align-items-center">
-                    <Button
-                      variant="outline-success"
-                      size="sm"
-                      className="me-2"
-                      onClick={() => handleVote(comment.id, 1)}
-                    >
+                    <Button variant="outline-success" size="sm" className="me-2" onClick={() => handleVote(comment.id, 1)}>
                       👍 {comment.likes ?? 0}
                     </Button>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => handleVote(comment.id, -1)}
-                    >
+                    <Button variant="outline-danger" size="sm" onClick={() => handleVote(comment.id, -1)}>
                       👎 {comment.dislikes ?? 0}
                     </Button>
                   </div>

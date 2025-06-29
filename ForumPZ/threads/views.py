@@ -148,20 +148,25 @@ class ListOfAllowedUsersView(APIView):
         except Thread.DoesNotExist:
             return Response({"error": "Thread not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Public threads don't need permission logic
+        # If the thread is public, do not return allowed users
         if thread.is_public:
-            return Response({"info": "This is a public thread. All users can view it."})
+            return Response({"error": "Thread is public. All users can access it."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Only the author can view allowed users
-        if thread.author_id != request.user.id:
+        # Check if user has access to this thread
+        if not user_has_permission(request.user, thread):
             return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Get allowed users
-        # Now not returning permission for author cuz author don't have row in Permissions!!!!!!!!!!!!!!
+        # Collect all users with explicit permission
         permissions = Permission.objects.filter(thread=thread).select_related('user')
-        allowed_users = [{"id": p.user.id, "email": p.user.email} for p in permissions]
+        allowed_user_emails = {p.user.email for p in permissions}
 
-        return Response({"allowed_users": allowed_users})
+        # Always include the author's email
+        allowed_user_emails.add(thread.author.email)
+
+        # Return list of emails
+        return Response(list(allowed_user_emails), status=status.HTTP_200_OK)
+
+
 
 def user_has_permission(user, thread):
     if thread.is_public:
@@ -180,7 +185,11 @@ class ThreadTitleView(APIView):
         if not user_has_permission(request.user, thread):
             return Response({"error": "You don't have access to this thread."}, status=status.HTTP_403_FORBIDDEN)
 
-        return Response({"title": thread.title}, status=status.HTTP_200_OK)
+        return Response({
+            "title": thread.title,
+            "is_public": thread.is_public,
+            "is_owner": thread.author_id == request.user.id
+        }, status=status.HTTP_200_OK)
 
 
 class VoteCommentView(APIView):
