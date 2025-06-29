@@ -15,6 +15,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from .utils import generate_verification_link, generate_refresh_password_token
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from .utils import delete_old_unverified_users
 
 
 User = get_user_model()
@@ -31,6 +32,9 @@ class ProtectedView(APIView):
 class RegisterView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
+        #delete unverified users
+        deleted = delete_old_unverified_users()
+
         email = request.data.get('email')
         password = request.data.get('password')
         first_name = request.data.get('first_name')
@@ -126,6 +130,12 @@ class PasswordResetConfirmView(APIView):
                 return Response({"error": "Invalid or expired token"}, status=400)
 
             new_password = request.data.get("password")
+
+            try:
+                validate_password(new_password)
+            except DjangoValidationError as e:
+                return Response({'detail': 'Weak password'}, status=400)
+
             user.set_password(new_password)
             user.save()
             return Response({"message": "Password reset successful."})

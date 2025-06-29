@@ -65,6 +65,7 @@ const Login = ({ onLogin }) => {
                     <Form.Control
                         type="password"
                         name="password"
+                        autoComplete="off"
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

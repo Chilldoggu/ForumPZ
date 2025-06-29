@@ -23,7 +23,7 @@ function ResetPasswordConfirm() {
       setMessage('Password reset successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch {
-      setMessage('Error resetting password. Please try again.');
+      setMessage('Weak password, should have 10 chars or more');
     }
   };
 

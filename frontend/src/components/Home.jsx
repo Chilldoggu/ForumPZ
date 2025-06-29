@@ -205,25 +205,6 @@ const Home = ({ accessToken }) => {
                   </ul>
                 </div>
 
-                <div className="mt-4">
-                  <h6>Last Committed</h6>
-                  <ul className="list-unstyled">
-                    {lastCommittedThreads.length > 0 ? (
-                      lastCommittedThreads.slice(0, 4).map((thread) => (
-                        <li key={thread.id}>
-                          <Link
-                            to={`/thread/${thread.id}`}
-                            style={{ color: "white" }}
-                          >
-                            {thread.title}
-                          </Link>
-                        </li>
-                      ))
-                    ) : (
-                      <li>No commits yet</li>
-                    )}
-                  </ul>
-                </div>
               </>
             ) : (
               <p>{error}</p>

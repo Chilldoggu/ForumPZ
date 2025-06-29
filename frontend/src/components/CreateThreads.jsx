@@ -3,7 +3,6 @@ import {
   Container,
   Button,
   Form,
-  FormControl,
   FormGroup,
   FormLabel,
   FormCheck,
@@ -13,9 +12,6 @@ function CreateThread() {
   const [formData, setFormData] = useState({
     title: '',
     is_public: '',
-    description: '',
-    tags: '',
-    image: null,
   });
 
   const [message, setMessage] = useState('');
@@ -36,8 +32,6 @@ function CreateThread() {
       const threadData = new FormData();
       threadData.append('title', formData.title);
       threadData.append('is_public', formData.is_public);
-      threadData.append('description', formData.description);
-      threadData.append('tags', formData.tags);
 
       if (formData.image) {
         threadData.append('image', formData.image);
@@ -94,27 +88,6 @@ function CreateThread() {
             name="is_public"
             value="0"
             checked={formData.is_public === '0'}
-            onChange={handleChange}
-          />
-        </FormGroup>
-
-        <FormGroup controlId="description" className="mb-5 form-control-lg">
-          <FormLabel>Description</FormLabel>
-          <FormControl
-            as="textarea"
-            rows={5}
-            placeholder="Enter description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-        </FormGroup>
-
-        <FormGroup controlId="image" className="mb-5 form-control-lg">
-          <FormLabel>Image</FormLabel>
-          <FormControl
-            type="file"
-            name="image"
             onChange={handleChange}
           />
         </FormGroup>
